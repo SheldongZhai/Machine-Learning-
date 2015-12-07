@@ -1,0 +1,191 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{final_project,times}
+\usepackage{float}
+%\documentstyle[nips12submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{Machine Learning Final Project: \\An improved Moving Average Trading Strategy with Kernel Ridge Regression}
+
+
+\author{
+Xiaodong Zhai\thanks{ Use footnote for providing further information
+about author (webpage, alternative address)} \\
+Department of Economics, Department of Computer Science\\
+Duke University\\
+Durham, NC 27705\\
+\texttt{xz125@duke.edu}
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+This report is for the 2015 fall course CompSci 571 Machine Learning, and provides an improved moving average trading strategy by using kernel ridge regression to extract the trend of stock prices under a minute level high-frequency trading environment. With real world data testing, compared with simple moving average trading strategy, the kernel ridge regression improves the return rates.
+\end{abstract}
+
+\section{About Moving Average Trading Strategy}
+
+This part we discuss what is moving average and the trading strategy based on it.
+
+\subsection{How Moving Average Works}
+The Simple Moving Average (SMA), is the simple average of a subset of a set of data. In this report, we define the moving average of a prices series ${S_t}$ on $m$ time steps (days or hours or minutes) as 
+\[
+\mathit{MA}(m) = \frac{1}{m} \sum^{m-1}_{t=0} S_t
+\]
+
+\subsection{How Moving Average Trading Strategy Works}
+First of all, the moving average trading strategy is based on the calculation of moving average. More importantly, the strategy is based on the assumption that prices time series ${S_t}$ is positively related, which implies
+\[
+\mathrm{Cov}(S_t, S_{t+i}) > 0
+\]
+We are not sure how fast the positive correlation decays, but we can reasonably assume that it holds for some small $i$. Intuitively, the positive correlation can be described as the prices would go up after an up, and would go down after a down.
+
+Thus, with how moving average changes, we could estimate what direction the price series would go in next time step. If the recent moving average is higher than before, we would estimate the price would go up and take a long position in the asset; if the recent moving average is lower than before, we would estimate the price sould go down and take a short position in the asset (or flat our position in our report case). For convenience, we define
+\[
+\mathit{MA}(m, n) =\frac{1}{m}\sum^{m-1}_{i=0}S_{i-1} - \frac{1}{n}\sum^{n-1}_{i=0}S_{i-1}, \ \mathit{where} \ m < n
+\]
+to generate the signals to long or short.
+
+
+\section{About Kernel Ridge Regression}
+The classic way to conduct a regression is to minimize the loss (or cost) function 
+\[
+l(w) = \sum_i (y_i - w^{T}x_i)^{2}
+\]
+A simple yet effective way to regularize the cost is to penalize the norm of $w$, thus
+\[
+l = \sum_i (y_i - w^{T}x_i)^{2}+\frac{1}{2}\lambda||w||^2
+\]
+By introducing the data feature vector, we get $x_i \to \phi_i = \phi(x_i)$. Then we introduce kernel $K_{i, j} = K(x_i, x_j) = \phi(x_i)^T\phi(x_j)$, and our aim is to 
+\[
+\min_{f\in H} \frac{1}{c}(Kc-y)^2+\lambda||f||^2_K
+\]
+
+
+Our method is to use the kernel ridge regression to generate the estimate of the continuous price series line, and execute the moving average strategy on the newly generated price series estimate.
+
+\section{Data, Methods and Results}
+
+\subsection{Data}
+The high frequency data is from the course Econ 690 High-Frequency Financial Econometrics. To be fair, we use the 5 minute level data of the stock market proxy, S\&P 500 index (SPY).
+
+\subsection{Methods}
+As mentioned above, we choose a random week and a random week as our testing sample. Given the same data within a week, we implement, separately, the Simple Moving Average based on raw price series Strategy, and the Moving Average Strategy based on KRR price series. At last we evaluate strategies by look at the total return rates (not annualized) and its Sharpe ratio.
+
+\subsection{Results}
+
+\begin{table}[H]
+\caption{Testing Sample Week Accumulated Return Rate 20131101 - 20131107}
+\label{Table 1}
+\begin{center}
+\begin{tabular}{l | l l}
+\multicolumn{1}{c}{\bf MA(m,n)}  &\multicolumn{1}{c}{\bf SMA} & \multicolumn{1}{c}{\bf KRR}
+\\ \hline \\
+MA(5min,10min) &   0.0325     & 0.0229 \\
+MA(5min,15min) &   0.0188     & 0.0168 \\
+MA(10min,15min) &  -0.0197    & -0.0038\\
+MA(10min,30min) &   0.0325    & -0.0031\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\caption{Testing Sample Week Sharpe Ratio 20131101 - 20131107}
+\label{Table 2}
+\begin{center}
+\begin{tabular}{l | l l}
+\multicolumn{1}{c}{\bf MA(m,n)}  &\multicolumn{1}{c}{\bf SMA} & \multicolumn{1}{c}{\bf KRR}
+\\ \hline \\
+MA(5min,10min) &   0.0682     & 0.0421 \\
+MA(5min,15min) &   0.0378     & 0.0308 \\
+MA(10min,15min) &  -0.0449    & -0.0001\\
+MA(10min,30min) &   0.0405    & -0.0069\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\caption{Testing Sample Month Accumulated Return Rate 20141104 - 20141204}
+\label{Table 3}
+\begin{center}
+\begin{tabular}{l | l l}
+\multicolumn{1}{c}{\bf MA(m,n)}  &\multicolumn{1}{c}{\bf SMA} & \multicolumn{1}{c}{\bf KRR}
+\\ \hline \\
+MA(5min,10min) &   -0.0103     & 0.0013 \\
+MA(5min,15min) &   -0.0050     & 0.0053 \\
+MA(10min,15min) &  0.0089    & 0.0127\\
+MA(10min,30min) &   0.0080    & 0.0061\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\caption{Testing Sample Month Sharpe Ratio 20131101 - 20131107}
+\label{Table 4}
+\begin{center}
+\begin{tabular}{l | l l}
+\multicolumn{1}{c}{\bf MA(m,n)}  &\multicolumn{1}{c}{\bf SMA} & \multicolumn{1}{c}{\bf KRR}
+\\ \hline \\
+MA(5min,10min) &   -0.0015     & 0.0018 \\
+MA(5min,15min) &   -0.0072     & 0.0174 \\
+MA(10min,15min) &  -0.0127    & 0.0176\\
+MA(10min,30min) &   0.0110    & 0.0080\\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{figure}[H]
+\begin{center}
+\fbox{\includegraphics[width=0.8\textwidth]{fig1.jpg}}
+\end{center}
+\caption{Sample figure caption.}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\fbox{\includegraphics[width=0.8\textwidth]{fig2.jpg}}
+\end{center}
+\caption{Sample figure caption.}
+\end{figure}
+
+\section{Conclusion}
+
+From the back-testing results, it is obvious that in most cases, the KRR moving average provides a better estimate of price series moving direction, and a better Sharpe ratio is also seen. 
+
+Thus, an improvement of moving average trading strategy by KRR on price series is what we get.
+
+
+
+
+
+\section*{Acknowledgments}
+
+Thanks to Yi Cao at Cranfield University who shared the Matlba code for kernel calculation.
+
+Thanks to Professor Michael Brandt, who took me to the quantitative finance field in the very begining. 
+
+Thanks to Dr. Jim Gerdy, Mr. Joe Steelman who were my internship managers and it was their guidance that helped me know more about trading and high-frequency trading. 
+
+Thanks to Professor George Tauch, the professor instructor of course High-Frequency Financial Econometrics, and Mr. Red Davies, our wonderful TA. 
+
+Thanks to Professor Sayan Mukherjee, in whose Machine Learning course I got to finish this project.
+
+\subsection*{References}
+
+\small{
+[1] Sayan Mukherjee (2015) Probabilistic Machine Learning, class notes 
+
+[2] Richard D.F. Harris \& Fatih Yilmaz (2008) {\it A Momentum Trading Strategy Based on the Low Frequency Component of the Exchange Rate.} {\it Xfi Centre For Financial \& Investment Working Paper No. 08/04} 
+
+\end{document}
